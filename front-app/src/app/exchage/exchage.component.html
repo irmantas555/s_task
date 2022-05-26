@@ -1,0 +1,28 @@
+<div class="background d-flex flex-column align-content-center row-hl">
+  <form class="mt-5 form-w item-hl align-self-center">
+    <mat-form-field appearance="outline">
+      <mat-label class="">{{'Keičiama valiuta'}}</mat-label>
+      <mat-select [(value)]="currencyFrom">
+        <mat-option *ngFor="let currency of currencies" [value]="currencyFrom" (onSelectionChange)="assignFrom(currency)">{{currency.name}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field  class="mx-5" appearance="outline">
+      <mat-label>{{'Norima valiuta'}}</mat-label>
+      <mat-select [(value)]="currencyTo">
+        <mat-option *ngFor="let currency of currencies" [value]="currencyTo" (onSelectionChange)="assignTo(currency)">{{currency.name}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{'Keičiamas kiekis'}}</mat-label>
+      <input matInput type="number" (change)="changeAmount($event.target)">
+    </mat-form-field>
+    <div class="row mb-3">
+      <button mat-raised-button class="mx-2" color="primary" (click)="submitTask()">Keisti</button>
+    </div>
+    <div *ngIf="currentTask.result" class="col item-hl">
+      <span class="display-5 text-primary">{{'Askaičiuotas kiekis: '}}</span>
+      <span class="display-5 text-primary">{{currentTask.result}}</span>
+    </div>
+  </form>
+</div>
+
