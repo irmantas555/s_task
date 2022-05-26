@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class STaskApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(STaskApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(STaskApplication.class, args);
+    }
 
 }

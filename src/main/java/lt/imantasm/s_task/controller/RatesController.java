@@ -20,17 +20,17 @@ import lt.imantasm.s_task.model.currency.service.CurrencyRatesService;
 @RequiredArgsConstructor
 public class RatesController {
 
-    private final CurrencyRatesService ratesService;
+    private final CurrencyRatesService currencyRatesService;
 
     @CrossOrigin
-    @GetMapping("today-rates")
-    public ResponseEntity<List<Currency>> getTodayRates(){
-        return ResponseEntity.ok(this.ratesService.findAllRates());
+    @GetMapping("/today-rates")
+    public List<Currency> getTodayRates() {
+        return currencyRatesService.findAllRates();
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/calculate/rate-amount")
     public ResponseEntity<ExchangeTask> calculateExchangeResult(@RequestBody ExchangeTask exchangeTask) {
-        return ResponseEntity.ok(ratesService.calculateResultForExchange(exchangeTask));
+        return ResponseEntity.ok(currencyRatesService.calculateResultForExchange(exchangeTask));
     }
 }

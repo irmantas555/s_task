@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {ExchangeService} from 'src/app/services/exchange-service';
 import {Currency} from 'src/app/model/currency';
 import {ExchangeTask} from 'src/app/model/ExchangeTask';
-import {FormControl, FormGroup, Validators} from '@angular/forms';
+import {FormBuilder, FormControl, Validators} from '@angular/forms';
 
 @Component({
   selector: 'app-exchage',
@@ -10,51 +10,46 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
   styleUrls: ['./exchage.component.scss']
 })
 export class ExchageComponent implements OnInit {
-  currencies : Currency[] = [];
-  currencyFrom: Currency | undefined;
-  currencyTo: Currency | undefined;
-  currentTask : ExchangeTask = new ExchangeTask();
+  currencies: Currency[] = [];
+  task = new ExchangeTask()
 
-  taskForm = new FormGroup({
-    from: new FormControl(this.currentTask.from, Validators.required),
-    to: new FormControl(this.currentTask.from, Validators.required),
-    amount: new FormControl(this.currentTask.from, Validators.required),
+  taskForm = this.fb.group({
+    from: new FormControl('', Validators.required),
+    to: new FormControl('', Validators.required),
+    amount: new FormControl(0, [Validators.required, Validators.min(0.01)]),
   })
 
-  constructor(private exchangeService: ExchangeService) { }
+  constructor(private exchangeService: ExchangeService, private fb: FormBuilder) { }
 
   ngOnInit(): void {
     this.exchangeService.getTodaysRates().subscribe(curenciesWithRates => {
       this.currencies.push(...curenciesWithRates);
-      this.currencyFrom = this.currencies[1];
-      this.currencyTo = this.currencies[1];
+      this.taskForm.setValue({from: this.currencies[0], to: this.currencies[1], amount: 0});
+      this.assignFrom();
+      this.assignTo();
     });
   }
 
-  assignFrom(currency: Currency) {
-    this.currencyFrom = currency;
-    this.currentTask.from = currency.id;
+  assignFrom() {
+    this.task.from = this.taskForm.controls['from'].value.id;
+    this.task.result = undefined;
   }
 
-  assignTo(currency: Currency) {
-    this.currencyTo = currency;
-    this.currentTask.to = currency.id;
+  assignTo() {
+    this.task.to = this.taskForm.controls['to'].value.id;
+    this.task.result = undefined;
   }
 
   submitTask() {
-    // console.log('Before ' + JSON.stringify(this.currentTask))
-    if (this.currencyFrom && this.currencyTo && this.currentTask?.amount) {
-      this.exchangeService.getExchangeResult(this.currentTask).subscribe(rez => {
-        console.log(rez)
-        this.currentTask = rez
-      })
+    if (this.taskForm.valid) {
+      this.exchangeService.getExchangeResult(this.task).subscribe(rez => {
+        this.task = rez
+      });
     }
   }
 
   changeAmount(event: EventTarget | null) {
-    const value = (event as HTMLInputElement).value
-    console.log(value + ' ' + typeof value)
-    this.currentTask.amount = parseFloat(value ?? '') ?? 0;
-    // console.log('Before ' + JSON.stringify(this.currentTask))
+    const value = (event as HTMLInputElement).value;
+    this.task.amount = parseFloat(value ?? '') ?? 0;
   }
 }

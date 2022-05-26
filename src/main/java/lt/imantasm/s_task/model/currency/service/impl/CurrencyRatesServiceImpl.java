@@ -17,6 +17,7 @@ import lt.imantasm.s_task.model.currency.service.CurrencyRatesService;
 public class CurrencyRatesServiceImpl implements CurrencyRatesService {
 
     private final CurrencyRepository currencyRepository;
+
     @Override
     public ExchangeTask calculateResultForExchange(ExchangeTask exchangeTask) {
         Currency baseCurrency = currencyRepository.findById(exchangeTask.getFrom()).orElse(null);

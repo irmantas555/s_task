@@ -1,5 +1,5 @@
-.background{
-  background-color: #cbd3da;
+.background {
+  background-color: #fafafa;
   width: 100%;
   height: 100%;
 }
@@ -14,7 +14,11 @@
   max-width: 50rem;
 }
 
-button{
+.button {
   min-width: min-content;
   max-width: 5rem;
+}
+
+.mat-input-wrapper {
+  background: gray;
 }

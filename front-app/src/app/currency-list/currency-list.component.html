@@ -1,0 +1,23 @@
+<div class="d-flex justify-content-center">
+  <table [dataSource]="currencies" class="mat-elevation-z8 mt-3" mat-table>
+    <ng-container matColumnDef="id">
+      <th *matHeaderCellDef mat-header-cell>No.</th>
+      <td *matCellDef="let element" mat-cell>{{element.id}}</td>
+    </ng-container>
+    <ng-container matColumnDef="name">
+      <th *matHeaderCellDef mat-header-cell>Country</th>
+      <td *matCellDef="let element" mat-cell>{{element.name}}</td>
+    </ng-container>
+    <ng-container matColumnDef="code">
+      <th *matHeaderCellDef mat-header-cell>Currency</th>
+      <td *matCellDef="let element" mat-cell>{{element.code}}</td>
+    </ng-container>
+    <ng-container matColumnDef="rate">
+      <th *matHeaderCellDef mat-header-cell>EUR rate</th>
+      <td *matCellDef="let element" mat-cell>{{element.rateToEuro}}</td>
+    </ng-container>
+
+    <tr *matHeaderRowDef="columns" mat-header-row></tr>
+    <tr *matRowDef="let row; columns: columns;" mat-row></tr>
+  </table>
+</div>

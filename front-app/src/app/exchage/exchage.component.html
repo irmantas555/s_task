@@ -1,27 +1,30 @@
 <div class="background d-flex flex-column align-content-center row-hl">
-  <form class="mt-5 form-w item-hl align-self-center">
-    <mat-form-field appearance="outline">
+  <form [formGroup]="taskForm" class="mt-5 form-w item-hl align-self-center">
+    <mat-form-field appearance="outline" color="warn" id="field-from">
       <mat-label class="">{{'Keičiama valiuta'}}</mat-label>
-      <mat-select [(value)]="currencyFrom">
-        <mat-option *ngFor="let currency of currencies" [value]="currencyFrom" (onSelectionChange)="assignFrom(currency)">{{currency.name}}</mat-option>
+      <mat-select (selectionChange)="assignFrom()" [formControlName]="'from'" id="sel-from">
+        <mat-option *ngFor="let currency of currencies, let i = index" [value]="currencies[i]">{{currency.name}}</mat-option>
       </mat-select>
+      <mat-error *ngIf="taskForm.controls['from'].hasError('required')">Reikšmė būtina</mat-error>
     </mat-form-field>
-    <mat-form-field  class="mx-5" appearance="outline">
+    <mat-form-field appearance="outline" class="mx-5" id="field-to">
       <mat-label>{{'Norima valiuta'}}</mat-label>
-      <mat-select [(value)]="currencyTo">
-        <mat-option *ngFor="let currency of currencies" [value]="currencyTo" (onSelectionChange)="assignTo(currency)">{{currency.name}}</mat-option>
+      <mat-select (selectionChange)="assignTo()" [formControlName]="'to'" id="sel-to">
+        <mat-option *ngFor="let currency of currencies, let i = index" [value]="currencies[i]">{{currency.name}}</mat-option>
       </mat-select>
+      <mat-error *ngIf="taskForm.controls['to'].hasError('required')">Reikšmė būtina</mat-error>
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>{{'Keičiamas kiekis'}}</mat-label>
-      <input matInput type="number" (change)="changeAmount($event.target)">
+      <input (change)="changeAmount($event.target)" formControlName="amount" matInput type="number">
+      <mat-error *ngIf="taskForm.controls['amount'].hasError('required')">Reikšmė būtina</mat-error>
+      <mat-error *ngIf="taskForm.controls['amount'].hasError('min')">Reikšmė lygi nuliui arba mažesnė</mat-error>
     </mat-form-field>
     <div class="row mb-3">
-      <button mat-raised-button class="mx-2" color="primary" (click)="submitTask()">Keisti</button>
+      <button (click)="submitTask()" class="mx-2 button" color="primary" mat-raised-button>Skaičiuoti</button>
     </div>
-    <div *ngIf="currentTask.result" class="col item-hl">
-      <span class="display-5 text-primary">{{'Askaičiuotas kiekis: '}}</span>
-      <span class="display-5 text-primary">{{currentTask.result}}</span>
+    <div *ngIf="task.result" class="d-flex">
+      <button class="btn btn-outline-dark btn-lg" disabled="true" type="button">{{'Askaičiuotas kiekis: ' + task.result}}</button>
     </div>
   </form>
 </div>
