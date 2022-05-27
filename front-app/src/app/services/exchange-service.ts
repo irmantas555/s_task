@@ -15,6 +15,14 @@ export class ExchangeService {
     return this.http.get<Currency[]>('http://localhost:8080/rates/today-rates');
   }
 
+  public getDateRates(date: string): Observable<Currency[]> {
+    return this.http.get<Currency[]>('http://localhost:8080/rates/historical/' + date);
+  }
+
+  public getAvailableDates(): Observable<Date[]> {
+    return this.http.get<Date[]>('http://localhost:8080/rates/historical/available-dates');
+  }
+
   public getExchangeResult(task: ExchangeTask): Observable<ExchangeTask> {
     return this.http.post<ExchangeTask>('http://localhost:8080/rates/calculate/rate-amount', task);
   }

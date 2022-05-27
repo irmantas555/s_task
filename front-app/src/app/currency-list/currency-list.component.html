@@ -2,7 +2,7 @@
   <table [dataSource]="currencies" class="mat-elevation-z8 mt-3" mat-table>
     <ng-container matColumnDef="id">
       <th *matHeaderCellDef mat-header-cell>No.</th>
-      <td *matCellDef="let element" mat-cell>{{element.id}}</td>
+      <td *matCellDef="let element;let i = index" mat-cell>{{getIndex(i)}}</td>
     </ng-container>
     <ng-container matColumnDef="name">
       <th *matHeaderCellDef mat-header-cell>Country</th>

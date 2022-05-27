@@ -3,6 +3,7 @@ import {ExchangeService} from 'src/app/services/exchange-service';
 import {Currency} from 'src/app/model/currency';
 import {ExchangeTask} from 'src/app/model/ExchangeTask';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
+import {DialogService} from 'src/app/services/dialog-service';
 
 @Component({
   selector: 'app-exchage',
@@ -19,7 +20,7 @@ export class ExchageComponent implements OnInit {
     amount: new FormControl(0, [Validators.required, Validators.min(0.01)]),
   })
 
-  constructor(private exchangeService: ExchangeService, private fb: FormBuilder) { }
+  constructor(private exchangeService: ExchangeService, private fb: FormBuilder, private dialogService: DialogService) { }
 
   ngOnInit(): void {
     this.exchangeService.getTodaysRates().subscribe(curenciesWithRates => {
@@ -27,7 +28,7 @@ export class ExchageComponent implements OnInit {
       this.taskForm.setValue({from: this.currencies[0], to: this.currencies[1], amount: 0});
       this.assignFrom();
       this.assignTo();
-    });
+    }, () => this.dialogService.showErrorDialog('There was en error getting the result. Please try later'));
   }
 
   assignFrom() {
@@ -52,4 +53,5 @@ export class ExchageComponent implements OnInit {
     const value = (event as HTMLInputElement).value;
     this.task.amount = parseFloat(value ?? '') ?? 0;
   }
+
 }

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import javax.annotation.PostConstruct;
@@ -24,6 +25,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -41,11 +43,6 @@ import lt.imantasm.s_task.model.currency.repository.CurrencyRepository;
 @Service
 @RequiredArgsConstructor
 public class FetchService {
-
-    static final Map<String, String> codeNameMap = new HashMap<>();
-    private final CurrencyRepository currencyRepository;
-    Map<String, Map<String, Double>> dateRatesMap = new HashMap<>();
-    ObjectMapper mapper = new ObjectMapper();
     @Value("${currency.fetch.xml.uri}")
     private String fetchUrlXML;
     @Value("${currency.fetch.csv.zip.uri}")
@@ -54,13 +51,20 @@ public class FetchService {
     private String currencyNames;
     @Value("${historical.data.file}")
     private String historicalDataTxtFile;
+    ObjectMapper mapper = new ObjectMapper();
+
+    static final Map<String, String> codeNameMap = new HashMap<>();
+    private final CurrencyRepository currencyRepository;
+    List<Currency> currencyList = new ArrayList<>();
+    Map<String, Map<String, Double>> dateRatesMap = new HashMap<>();
 
     @SneakyThrows
-    @PostConstruct
-    private void fetchAndProcessCSV() {
+    public boolean fetchAndProcessCSV() {
+        if (CollectionUtils.isEmpty(currencyList) || currencyList.get(0).getDate().equals(LocalDate.now())) {
+            return false;
+        }
         readCurrenciesNames();
         URL url = new URL(fetchUrlCsvZip);
-        List<Currency> currencyList = new ArrayList<>();
         try (ZipInputStream zis = new ZipInputStream(url.openStream())) {
             zis.getNextEntry();
             BufferedReader reader = new BufferedReader(new InputStreamReader(zis));
@@ -69,37 +73,66 @@ public class FetchService {
             for (int i = 1; i < currencyCodes.length; i++) {
                 String code = codeNameMap.get(currencyCodes[i]);
                 BigDecimal rateToEuro = BigDecimal.valueOf(Double.parseDouble(currencyRates[i].trim()));
-                currencyList.add(new Currency(null, currencyCodes[i], code != null ? code : "", rateToEuro));
+                currencyList.add(new Currency(null, currencyCodes[i], code != null ? code : "", rateToEuro, LocalDate.now()));
             }
-            saveHistoricalData(currencyCodes, currencyRates);
         } catch (Exception e) {
             log.info(e.getLocalizedMessage());
         }
-        currencyRepository.saveAll(currencyList);
+        return true;
     }
 
-    private void saveHistoricalData(String[] currencyCodes, String[] currencyRates) throws IOException {
+    @PostConstruct
+    public void saveHistoricalDataAndReturnNotExist() throws IOException {
+        boolean todaysProcessed = fetchAndProcessCSV();
+        if (todaysProcessed) {
+            return;
+        } else {
+            readCurrenciesNames();
+        }
         String currentDateString = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH));
         Map<String, Double> data;
         dateRatesMap = mapper.readValue(new ClassPathResource(historicalDataTxtFile).getFile(), new TypeReference<>() {});
         data = dateRatesMap.get(currentDateString);
-        if (data.isEmpty()) {
+        if (data == null) {
             Map<String, Double> ratesMap = new HashMap<>();
-            Map<String, Map<String, Double>> dateRatesEntry = new HashMap<>();
-            for (int i = 1; i < currencyCodes.length; i++) {
-                ratesMap.put(currencyCodes[i], Double.parseDouble(currencyRates[i].trim()));
+            for (int i = 1; i < currencyList.size(); i++) {
+                ratesMap.put(currencyList.get(i).getCode(), currencyList.get(i).getRateToEuro().doubleValue());
             }
-            dateRatesEntry.put(currentDateString, ratesMap);
+            dateRatesMap.put(currentDateString, ratesMap);
             String path = "src/main/resources/historical_data.txt";
-            try (BufferedWriter out = new BufferedWriter(new FileWriter(path, true))) {
-                String s = mapper.writeValueAsString(dateRatesEntry);
+            try (BufferedWriter out = new BufferedWriter(new FileWriter(path, false))) {
+                String s = mapper.writeValueAsString(dateRatesMap);
                 out.write(s);
-                out.newLine();
                 out.flush();
             } catch (IOException e) {
                 log.info(Arrays.toString(e.getStackTrace()));
             }
         }
+        long count = currencyRepository.count();
+        if (count == 0) {
+            List<Currency> allCurencyDates = processDatesRateMap(dateRatesMap);
+            currencyRepository.saveAll(allCurencyDates);
+        } else {
+            currencyRepository.saveAll(currencyList);
+        }
+
+    }
+
+    private List<Currency> processDatesRateMap(Map<String, Map<String, Double>> dateRatesMap) {
+        return dateRatesMap.entrySet().stream()
+                           .flatMap(entry -> getListFromEntry(entry).stream())
+                           .toList();
+    }
+
+    private List<Currency> getListFromEntry(Map.Entry<String, Map<String, Double>> entry) {
+        return entry.getValue().entrySet().stream()
+                    .map(entrySet -> Currency.builder().id(null)
+                                             .code(entrySet.getKey())
+                                             .name(codeNameMap.get(entrySet.getKey()))
+                                             .rateToEuro(BigDecimal.valueOf(entrySet.getValue()))
+                                             .date(LocalDate.parse(entry.getKey(), DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH)))
+                                             .build())
+                    .toList();
     }
 
     @SneakyThrows
@@ -117,7 +150,7 @@ public class FetchService {
     private List<Currency> fetchAndProcessXML() {
         URL url = new URL(fetchUrlXML);
         XmlMapper xmlMapper = new XmlMapper();
-        List<Currency> currencyList = new ArrayList<>();
+        List<Currency> currencyArrayList = new ArrayList<>();
         try (JsonParser parser = xmlMapper.getFactory().createParser(url)) {
             JsonToken token;
             while ((token = parser.nextToken()) != null) {
@@ -128,14 +161,13 @@ public class FetchService {
                     }
                     if (Objects.equals(parser.getValueAsString(), "rate")) {
                         parser.nextToken();
-                        currencyList.add(new Currency(null, currency, "", BigDecimal.valueOf(Double.parseDouble(parser.getValueAsString().trim()))));
+                        currencyArrayList.add(new Currency(null, currency, "", BigDecimal.valueOf(Double.parseDouble(parser.getValueAsString().trim())), LocalDate.now()));
                     }
                 }
             }
         } catch (Exception e) {
             log.info(Arrays.toString(e.getStackTrace()));
         }
-        return currencyList;
+        return currencyArrayList;
     }
-
 }

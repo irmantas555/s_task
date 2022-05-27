@@ -9,8 +9,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,24 +51,26 @@ class RatesControllerTest {
     @BeforeEach
     public void setup() {
         task = new ExchangeTask(1L, 6L, 10L, null);
-        us = new Currency(1L, "USD", "USA Dollar", BigDecimal.valueOf(1.07));
-        gb = new Currency(6L, "GBP", "Great Britain Pound", BigDecimal.valueOf(0.85));
+        us = new Currency(1L, "USD", "USA Dollar", BigDecimal.valueOf(1.07), LocalDate.now());
+        gb = new Currency(6L, "GBP", "Great Britain Pound", BigDecimal.valueOf(0.85), LocalDate.now());
     }
 
     @SneakyThrows
     @Test
+    @DisplayName("Return Australia Dollar successful")
     void getTodayRates() {
         mockMvc.perform(get("/rates/today-rates"))
                .andExpect(jsonPath("$", hasSize(31)))
-               .andExpect(jsonPath("$[0].id", is(1)))
-               .andExpect(jsonPath("$[0].code", is("USD")))
-               .andExpect(jsonPath("$[0].name", is("USA Dollar")))
+               .andExpect(jsonPath("$[0].id", is(39)))
+               .andExpect(jsonPath("$[0].code", is("AUD")))
+               .andExpect(jsonPath("$[0].name", is("Australia Dollar")))
                .andExpect(jsonPath("$[0].rateToEuro", greaterThan(.9)))
                .andReturn();
     }
 
     @SneakyThrows
     @Test
+    @DisplayName("Test calculation result successful")
     void calculateExchangeResult() {
         mockMvc.perform(post("/rates/calculate/rate-amount")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -74,6 +78,7 @@ class RatesControllerTest {
                .andExpect(jsonPath("$.from", is(1)))
                .andExpect(jsonPath("$.to", is(6)))
                .andExpect(jsonPath("$.amount", is(10)))
-               .andExpect(jsonPath("$.result", lessThan(10.0)));
+               .andExpect(jsonPath("$.result", lessThan(100.0)))
+               .andExpect(jsonPath("$.result", greaterThan(20.0)));
     }
 }

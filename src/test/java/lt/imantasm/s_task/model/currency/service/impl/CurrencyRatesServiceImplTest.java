@@ -5,9 +5,11 @@ import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -36,12 +38,13 @@ class CurrencyRatesServiceImplTest {
     @BeforeEach
     void setUp() {
         task = new ExchangeTask(1L, 6L, 10L, null);
-        us = new Currency(1L, "USD", "USA Dollar", BigDecimal.valueOf(1.07));
-        gb = new Currency(6L, "GBP", "Great Britain Pound", BigDecimal.valueOf(0.85));
+        us = new Currency(1L, "USD", "USA Dollar", BigDecimal.valueOf(1.07), LocalDate.now());
+        gb = new Currency(6L, "GBP", "Great Britain Pound", BigDecimal.valueOf(0.85), LocalDate.now());
         service = new CurrencyRatesServiceImpl(currencyRepository);
     }
 
     @Test
+    @DisplayName("Test service retrieve and values and return result if successful")
     void calculateResultForExchange() {
 
         when(currencyRepository.findById(1L)).thenReturn(Optional.of(us));
@@ -52,6 +55,7 @@ class CurrencyRatesServiceImplTest {
 
     @SneakyThrows
     @Test
+    @DisplayName("Test service calculation if successful")
     void findAllRates() {
         Method gbd = service.getClass().getDeclaredMethod("getBigDecimal", ExchangeTask.class, Currency.class, Currency.class);
         gbd.setAccessible(true);

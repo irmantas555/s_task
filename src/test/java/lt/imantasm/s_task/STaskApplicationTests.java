@@ -10,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import lt.imantasm.s_task.controller.RatesController;
-import lt.imantasm.s_task.model.currency.service.CurrencyRatesService;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest

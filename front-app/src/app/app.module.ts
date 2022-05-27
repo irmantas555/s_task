@@ -16,11 +16,16 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {CurrencyListComponent} from './currency-list/currency-list.component';
 import {RouterModule, Routes} from '@angular/router';
 import {MatTableModule} from '@angular/material/table';
+import {HistoricalDataComponent} from './historical-data/historical-data.component';
+import {DialogComponent} from './dialog/dialog.component';
+import {MatDialogModule} from '@angular/material/dialog';
 
 const appRoutes: Routes = [
   {path: '', redirectTo: '/exchange', pathMatch: 'full'},
   {path: 'exchange', component: ExchageComponent},
   {path: 'currency-list', component: CurrencyListComponent},
+  {path: 'historical', component: HistoricalDataComponent},
+  {path: 'currency-list/:date', component: CurrencyListComponent},
 ];
 
 @NgModule({
@@ -29,6 +34,8 @@ const appRoutes: Routes = [
     NavbarComponent,
     ExchageComponent,
     CurrencyListComponent,
+    HistoricalDataComponent,
+    DialogComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
@@ -45,6 +52,7 @@ const appRoutes: Routes = [
     FormsModule,
     ReactiveFormsModule,
     MatTableModule,
+    MatDialogModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

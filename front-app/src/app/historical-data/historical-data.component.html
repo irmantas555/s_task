@@ -1,0 +1,9 @@
+<div class="frame">
+  <div class="grid">
+    <div *ngFor="let date of dates">
+      <a [routerLink]="['/currency-list', date]">
+        <button class="btn btn-outline-dark btn-lg" disabled="true" type="button">{{date | date}}</button>
+      </a>
+    </div>
+  </div>
+</div>

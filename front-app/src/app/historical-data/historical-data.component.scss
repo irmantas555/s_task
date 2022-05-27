@@ -1,0 +1,9 @@
+.grid {
+  width: 100vw;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+}
+
+.frame {
+  padding: 2rem;
+}

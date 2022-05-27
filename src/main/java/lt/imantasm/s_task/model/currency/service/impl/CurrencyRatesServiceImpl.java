@@ -2,6 +2,7 @@ package lt.imantasm.s_task.model.currency.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -32,8 +33,13 @@ public class CurrencyRatesServiceImpl implements CurrencyRatesService {
     }
 
     @Override
-    public List<Currency> findAllRates() {
-        return currencyRepository.findAll();
+    public List<Currency> findRatesByDate(LocalDate date) {
+        return currencyRepository.findAllByDateOrderByName(date);
+    }
+
+    @Override
+    public List<LocalDate> findAvailableDates() {
+        return currencyRepository.findAvailableDates();
     }
 
     private BigDecimal getBigDecimal(ExchangeTask exchangeTask, Currency baseCurrency, Currency targetCurrency) {
